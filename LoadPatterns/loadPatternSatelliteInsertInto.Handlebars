@@ -9,20 +9,32 @@ GO
 INSERT INTO [{{../metadataConfiguration.integrationDatabaseName}}].[dbo].[{{targetTable}}]
 (  {{#each businessKey}}
    [{{surrogateKey}}],{{/each}}
-   {{#each columnMapping}}
-   [{{targetColumn.columnName}}],{{/each}}
-   [{{../metadataConfiguration.etlProcessAttribute}}],
    [{{../metadataConfiguration.loadDateTimeAttribute}}],
-   [{{../metadataConfiguration.recordSourceAttribute}}]
+   [LOAD_END_DATETIME],
+   [CURRENT_RECORD_INDICATOR],
+   [{{../metadataConfiguration.etlProcessAttribute}}],
+   [ETL_UPDATE_RUN_ID],
+   [{{../metadataConfiguration.changeDataCaptureAttribute}}],
+   [{{../metadataConfiguration.sourceRowIdAttribute}}],
+   [{{../metadataConfiguration.recordSourceAttribute}}],
+   [{{../metadataConfiguration.recordChecksumAttribute}}],
+   {{#each columnMapping}}
+   [{{targetColumn.columnName}}]{{#unless @last}},{{/unless}}{{/each}}
 )
 SELECT {{#each businessKey}}
    link_view.[{{surrogateKey}}],{{/each}}
-   {{#each columnMapping}}
-   link_view.[{{targetColumn.columnName}}],{{/each}}
-   -1 AS [{{../metadataConfiguration.etlProcessAttribute}}],
    link_view.[{{../metadataConfiguration.loadDateTimeAttribute}}],
-   link_view.[{{../metadataConfiguration.recordSourceAttribute}}]
-FROM [{{../metadataConfiguration.vedwSchemaName}}].[{{targetTable}}] link_view
+   link_view.[LOAD_END_DATETIME],
+   link_view.[CURRENT_RECORD_INDICATOR],
+   link_view.[{{../metadataConfiguration.etlProcessAttribute}}],
+   -1 AS [ETL_UPDATE_RUN_ID],
+   link_view.[{{../metadataConfiguration.changeDataCaptureAttribute}}],
+   link_view.[{{../metadataConfiguration.sourceRowIdAttribute}}],
+   link_view.[{{../metadataConfiguration.recordSourceAttribute}}],
+   link_view.[{{../metadataConfiguration.recordChecksumAttribute}}],
+  {{#each columnMapping}}
+   link_view.[{{targetColumn.columnName}}]{{#unless @last}},{{/unless}}{{/each}}
+FROM [{{../metadataConfiguration.persistentStagingDatabaseName}}].[{{../metadataConfiguration.vedwSchemaName}}].[{{targetTable}}] link_view
 LEFT OUTER JOIN
    [{{../metadataConfiguration.integrationDatabaseName}}].[dbo].[{{targetTable}}] link_table
    ON link_view.[{{targetTableHashKey}}] = link_table.[{{targetTableHashKey}}]

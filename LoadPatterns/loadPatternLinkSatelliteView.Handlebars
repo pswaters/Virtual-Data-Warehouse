@@ -3,7 +3,7 @@
 -- Generated at {{generationDateTime}}
 --
 GO
-USE [{{metadataConfiguration.persistentStagingdatabaseName}}]
+USE [{{metadataConfiguration.persistentStagingDatabaseName}}]
 GO
 
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[{{metadataConfiguration.vedwSchemaName}}].[{{mainTable}}]') AND type in (N'V'))
@@ -16,34 +16,36 @@ FROM (
 {{#each individualSourceToTargetMapping}}{{#if @first}}
 SELECT
     HASHBYTES('MD5',
-    {{#each businessKey.businessKeyComponentMapping}}
-      ISNULL(RTRIM(CONVERT(NVARCHAR(100), {{targetComponentName}})), 'N/A') + '#~!' {{#unless @last}}+{{/unless}}
-    {{/each}}
+   {{#each businessKey}}{{#each businessKeyComponentMapping}}
+      ISNULL(RTRIM(CONVERT(NVARCHAR(100), {{targetColumn.columnName}})), 'N/A') + '#~!' {{#unless @last}}+{{/unless}}
+    {{/each}}{{/each}}
     ) AS {{targetTableHashKey}},
     -1 AS {{../metadataConfiguration.etlProcessAttribute}},
     {{../metadataConfiguration.loadDateTimeAttribute}},
     {{../metadataConfiguration.recordSourceAttribute}},
-    {{#each businessKey.businessKeyComponentMapping}}
-    {{targetComponentName}},
-    {{/each}}
-    ROW_NUMBER() OVER (PARTITION BY {{#each businessKey.businessKeyComponentMapping}}{{targetComponentName}}{{#unless @last}},{{/unless}}{{/each}} ORDER BY {{../metadataConfiguration.loadDateTimeAttribute}}) AS ROW_NR
+    {{#each businessKey}}{{#each businessKeyComponentMapping}}
+    {{targetColumn.columnName}},
+    {{/each}}{{/each}}
+    ROW_NUMBER() OVER (PARTITION BY   {{#each businessKey}}{{#each businessKeyComponentMapping}}
+{{targetColumn.columnName}}{{#unless @last}},{{/unless}}{{/each}}{{/each}} ORDER BY {{../metadataConfiguration.loadDateTimeAttribute}}) AS ROW_NR
 FROM {{/if}}{{/each}}
 (
     {{#each individualSourceToTargetMapping }}
     SELECT
-    {{#each businessKey.businessKeyComponentMapping}}
-        CONVERT(NVARCHAR(100),[{{sourceComponentName}}]) AS [{{targetComponentName}}],
-    {{/each}}
+    {{#each businessKey}}{{#each businessKeyComponentMapping}}
+        CONVERT(NVARCHAR(100),{{sourceColumn.columnName}}) AS [{{targetColumn.columnName}}],
+    {{/each}}{{/each}}
         {{../metadataConfiguration.recordSourceAttribute}},
         MIN({{../metadataConfiguration.loadDateTimeAttribute}}) AS {{../metadataConfiguration.loadDateTimeAttribute}}
     FROM {{sourceTable}}
     WHERE
-    {{#each businessKey.businessKeyComponentMapping}}
-        [{{sourceComponentName}}] IS NOT NULL {{/each}}{{#if filterCriterion}}AND {{filterCriterion}}{{/if}}
+     {{#each businessKey}}{{#each businessKeyComponentMapping}}
+        {{sourceColumn.columnName}} IS NOT NULL {{#unless @last}}AND{{/unless}} {{/each}}{{/each}}{{#if filterCriterion}}AND {{filterCriterion}}{{/if}}
     GROUP BY
-    {{#each businessKey.businessKeyComponentMapping}}
-        [{{sourceComponentName}}],
-    {{/each}}
+     {{#each businessKey}}{{#each businessKeyComponentMapping}}{{#unless sourceColumn.columnType}}
+        {{sourceColumn.columnName}},
+    {{/unless}}
+    {{/each}}{{/each}}
         {{../metadataConfiguration.recordSourceAttribute}}
     {{#unless @last}}UNION{{/unless}}
     {{/each}}
@@ -55,17 +57,8 @@ SELECT 0x00000000000000000000000000000000,
 - 1,
 '1900-01-01',
 'Data Warehouse',
-'Unknown',
+{{#each individualSourceToTargetMapping}}{{#if @first}}
+    {{#each businessKey}}{{#each businessKeyComponentMapping}}
+NULL,
+{{/each}}{{/each}}{{/if}}{{/each}}
 1 AS ROW_NR
-
-
-
-
-
-
-
-
-
-
-
-

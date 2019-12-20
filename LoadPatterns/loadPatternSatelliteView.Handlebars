@@ -4,7 +4,7 @@
 -- Generated at {{../generationDateTime}}
 --
 GO
-USE [{{../metadataConfiguration.persistentStagingdatabaseName}}]
+USE [{{../metadataConfiguration.persistentStagingDatabaseName}}]
 GO
 
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[{{../metadataConfiguration.vedwSchemaName}}].[{{../mainTable}}]') AND type in (N'V'))
@@ -23,13 +23,13 @@ SELECT
       LEAD (DATEADD(mcs,[{{../metadataConfiguration.sourceRowIdAttribute}}], {{../metadataConfiguration.loadDateTimeAttribute}}) ) OVER
       ( PARTITION BY {{#each businessKey}} {{!-- The Hub business key --}}
           {{#each businessKeyComponentMapping}}
-          {{targetColumn.columnName}}{{/each}}{{#unless @last}},{{/unless}}{{/each}}
+          {{targetColumn.columnName}}{{#unless @last}},{{/unless}}{{/each}}{{/each}}
        ORDER BY {{../metadataConfiguration.loadDateTimeAttribute}}),
        CAST( '9999-12-31' AS DATETIME)
     ) AS LOAD_END_DATETIME,
     CASE
       WHEN ( RANK() OVER (PARTITION BY {{#each businessKey}} {{#each businessKeyComponentMapping}}
-        {{targetColumn.columnName}}{{/each}}{{#unless @last}},{{/unless}}{{/each}}
+        {{targetColumn.columnName}}{{#unless @last}},{{/unless}}{{/each}}{{/each}}
          ORDER BY {{../metadataConfiguration.loadDateTimeAttribute}} desc )) = 1
        THEN 'Y'
        ELSE 'N'
@@ -71,21 +71,21 @@ FROM
          COMBINED_VALUE,
          CASE 
            WHEN LAG(COMBINED_VALUE,1,0x00000000000000000000000000000000) OVER (PARTITION BY {{#each businessKey}} {{#each businessKeyComponentMapping}}
-             {{targetColumn.columnName}}{{/each}}{{#unless @last}},{{/unless}}{{/each}} 
+             {{targetColumn.columnName}}{{#unless @last}},{{/unless}}{{/each}}{{/each}} 
              ORDER BY [{{../metadataConfiguration.loadDateTimeAttribute}}] ASC, [{{../metadataConfiguration.eventDateTimeAttribute}}] ASC, [{{../metadataConfiguration.changeDataCaptureAttribute}}] DESC) = COMBINED_VALUE
            THEN 'Same'
            ELSE 'Different'
          END AS VALUE_CHANGE_INDICATOR,
          CASE 
            WHEN LAG([{{../metadataConfiguration.changeDataCaptureAttribute}}],1,'') OVER (PARTITION BY {{#each businessKey}} {{#each businessKeyComponentMapping}}
-             {{targetColumn.columnName}}{{/each}}{{#unless @last}},{{/unless}}{{/each}} 
+             {{targetColumn.columnName}}{{#unless @last}},{{/unless}}{{/each}}{{/each}} 
              ORDER BY [{{../metadataConfiguration.loadDateTimeAttribute}}] ASC, [{{../metadataConfiguration.eventDateTimeAttribute}}] ASC, [{{../metadataConfiguration.changeDataCaptureAttribute}}] ASC) = [{{../metadataConfiguration.changeDataCaptureAttribute}}]
            THEN 'Same'
            ELSE 'Different'
          END AS CDC_CHANGE_INDICATOR,
          CASE 
            WHEN LEAD([{{../metadataConfiguration.loadDateTimeAttribute}}],1,'9999-12-31') OVER (PARTITION BY {{#each businessKey}} {{#each businessKeyComponentMapping}}
-             {{targetColumn.columnName}}{{/each}}{{#unless @last}},{{/unless}}{{/each}} 
+             {{targetColumn.columnName}}{{#unless @last}},{{/unless}}{{/each}}{{/each}} 
              ORDER BY [{{../metadataConfiguration.loadDateTimeAttribute}}] ASC, [{{../metadataConfiguration.eventDateTimeAttribute}}] ASC, [{{../metadataConfiguration.changeDataCaptureAttribute}}] ASC) = [{{../metadataConfiguration.loadDateTimeAttribute}}]
            THEN 'Same'
            ELSE 'Different'
@@ -98,7 +98,7 @@ FROM
           [{{../metadataConfiguration.recordSourceAttribute}}],
           [{{../metadataConfiguration.sourceRowIdAttribute}}],
           [{{../metadataConfiguration.changeDataCaptureAttribute}}],{{#each businessKey}} {{#each businessKeyComponentMapping}}
-          CAST ([{{sourceColumn.columnName}}] AS NVARCHAR(100)) AS [{{targetColumn.columnName}}],{{/each}}{{/each}}        
+          CAST ({{sourceColumn.columnName}} AS NVARCHAR(100)) AS [{{targetColumn.columnName}}],{{/each}}{{/each}}        
           {{#each columnMapping}}
           [{{sourceColumn.columnName}}],
           {{/each}}
@@ -114,7 +114,7 @@ FROM
           'Data Warehouse' AS [{{../metadataConfiguration.recordSourceAttribute}}],
           0 AS [{{../metadataConfiguration.sourceRowIdAttribute}}],
           'N/A' AS  [{{../metadataConfiguration.changeDataCaptureAttribute}}],{{#each businessKey}} {{#each businessKeyComponentMapping}}
-          CAST ([{{sourceColumn.columnName}}] AS NVARCHAR(100)) AS [{{targetColumn.columnName}}],{{/each}}{{/each}}        
+          CAST ({{sourceColumn.columnName}} AS NVARCHAR(100)) AS [{{targetColumn.columnName}}],{{/each}}{{/each}}        
           {{#each columnMapping}}
           NULL AS [{{sourceColumn.columnName}}],
           {{/each}}
